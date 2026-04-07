@@ -1,0 +1,81 @@
+from datetime import date
+
+class Plato:
+    def __init__(self, nombre, precio_base, es_vegetariano=False):
+        self.nombre = nombre
+        self._precio_base = precio_base
+        self.es_vegetariano = es_vegetariano
+
+    def precio(self):
+        return self._precio_base
+
+class Comensal:
+    def __init__(self, id_estudiante, tipo_subsidio):
+        self.id_estudiante = id_estudiante
+        self.tipo_subsidio = tipo_subsidio.upper()
+
+    def calcular_descuento(self, valor_plato):
+        tasas = {"A": 0.80, "B": 0.50, "C": 0.20, "PARTICULAR": 0.0}
+        return valor_plato * tasas.get(self.tipo_subsidio, 0.0)
+
+class MenuDia:
+    def __init__(self):
+        self._opciones = []
+
+    def agregar_plato(self, plato):
+        self._opciones.append(plato)
+
+    def seleccionar_opcion(self, veg):
+        for p in self._opciones:
+            if p.es_vegetariano == veg: return p
+        return self._opciones[0]
+
+class ProcesadorVenta:
+    def generar_tiquete(self, estudiante, plato):
+        desc = estudiante.calcular_descuento(plato.precio())
+        total = plato.precio() - desc
+        print(f"\n{'='*35}\n      RECIBO DE PAGO NUTRI-UTP\n{'='*35}")
+        print(f"Estudiante ID: {estudiante.id_estudiante}")
+        print(f"Categoría:     {estudiante.tipo_subsidio}")
+        print(f"Plato:         {plato.nombre}")
+        print("-" * 35)
+        print(f"Valor Base:    ${plato.precio():,.0f}")
+        print(f"Descuento:    -${desc:,.0f}")
+        print(f"TOTAL NETO:    ${total:,.0f}")
+        print(f"{'='*35}\n")
+
+
+class InterfazUsuario:
+    
+    @staticmethod
+    def capturar_datos():
+        print(">>> INICIO DE SESIÓN NUTRI-UTP <<<")
+        identificacion = input("Identificación (ID): ")
+        
+        opciones_validas = ["A", "B", "C", "PARTICULAR"]
+        while True:
+            print(f"\nOpciones de subsidio: {', '.join(opciones_validas)}")
+            subsidio = input("Ingrese su tipo de subsidio: ").upper()
+            
+            if subsidio in opciones_validas:
+                break
+            else:
+                print(f"[ERROR] '{subsidio}' no es una opción válida. Intente de nuevo.")
+
+        opcion_veg = input("\n¿Desea el menú vegetariano? (S/N): ").lower() == 's'
+        
+        return identificacion, subsidio, opcion_veg
+
+
+if __name__ == "__main__":
+    menu = MenuDia()
+    menu.agregar_plato(Plato("Almuerzo Estándar", 12500, False))
+    menu.agregar_plato(Plato("Lasaña de Berenjena", 11000, True))
+
+    id_est, tipo_sub, es_veg = InterfazUsuario.capturar_datos()
+
+    estudiante = Comensal(id_est, tipo_sub)
+    plato_elegido = menu.seleccionar_opcion(es_veg)
+    
+    caja = ProcesadorVenta()
+    caja.generar_tiquete(estudiante, plato_elegido)
